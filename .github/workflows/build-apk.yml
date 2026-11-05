@@ -22,13 +22,16 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle 8.9
+        uses: gradle/gradle-build-action@v3
         with:
           gradle-version: "8.9"
 
       - name: Extract project
         run: unzip -o JARVIS-Android-source.zip
+
+      - name: Verify Gradle
+        run: gradle --version
 
       - name: Build APK
         run: gradle -p JARVIS-Android assembleDebug
