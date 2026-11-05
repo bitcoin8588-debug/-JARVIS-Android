@@ -27,9 +27,6 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Extract project
         run: unzip -o JARVIS-Android-source.zip
 
@@ -41,4 +38,3 @@ jobs:
         with:
           name: JARVIS-debug-APK
           path: JARVIS-Android/app/build/outputs/apk/debug/app-debug.apk
-          
