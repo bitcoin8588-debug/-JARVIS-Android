@@ -1,32 +1,69 @@
-name: Build Jarvis APK
+
+name: Build JARVIS V2 APK
+
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Find and unzip project
-        run: |
-          ls -R | head -50
-          ZIP=$(find . -iname "*.zip" | head -n 1)
-          echo "Using: $ZIP"
-          unzip -q "$ZIP" -d proj
-          DIR=$(dirname "$(find proj -name settings.gradle.kts | head -n 1)")
-          echo "PROJ=$DIR" >> $GITHUB_ENV
-      - uses: actions/setup-java@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+          java-version: '17'
+
+      - name: Extract Android source ZIP
+        run: |
+          ZIP="JARVIS-V2-Complete-Source.zip"
+
+          if [ ! -f "$ZIP" ]; then
+            echo "ERROR: Source ZIP not found!"
+            ls -la
+            exit 1
+          fi
+
+          mkdir -p extracted
+
+          unzip -o "$ZIP" -d extracted
+
+          if [ ! -f extracted/app/build.gradle.kts ]; then
+            echo "ERROR: Android app folder not found in ZIP!"
+            find extracted -maxdepth 4 -type f
+            exit 1
+          fi
+
+          cp -a extracted/. "$GITHUB_WORKSPACE/"
+
+          echo "Source extraction successful!"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Gradle
+        run: gradle --version
+
+      - name: Build Android APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verify APK
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -f "$APK"
+          ls -lh "$APK"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          gradle-version: "8.7"
-      - name: Build
-        working-directory: ${{ env.PROJ }}
-        run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: jarvis-apk
-          path: ${{ env.PROJ }}/app/build/outputs/apk/debug/app-debug.apk
+          name: JARVIS-V2-debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
