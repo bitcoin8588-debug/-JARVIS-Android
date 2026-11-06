@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "JARVIS-Android-source.zip"
+      - "JARVIS-Android-main.zip"
       - ".github/workflows/build-apk.yml"
 
 jobs:
