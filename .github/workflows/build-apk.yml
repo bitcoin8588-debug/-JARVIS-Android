@@ -8,8 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
-        run: unzip -q jarvis-android.zip
+      - name: Find and unzip project
+        run: |
+          ls -R | head -50
+          ZIP=$(find . -iname "*.zip" | head -n 1)
+          echo "Using: $ZIP"
+          unzip -q "$ZIP" -d proj
+          DIR=$(dirname "$(find proj -name settings.gradle.kts | head -n 1)")
+          echo "PROJ=$DIR" >> $GITHUB_ENV
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -18,9 +24,9 @@ jobs:
         with:
           gradle-version: "8.7"
       - name: Build
-        working-directory: jarvis
+        working-directory: ${{ env.PROJ }}
         run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: jarvis-apk
-          path: jarvis/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.PROJ }}/app/build/outputs/apk/debug/app-debug.apk
